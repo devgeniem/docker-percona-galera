@@ -36,12 +36,12 @@ RUN \
 # Define mountable directories.
 VOLUME ["/var/lib/mysql"]
 
-ADD . /app
+ADD root-files /
 
 # Define working directory.
 WORKDIR /app
 
-RUN chmod +x /app/bin/*
+RUN chmod +x /app/bin/* /etc/service/*/run
 
 # Define default command.
 CMD ["/app/bin/boot"]

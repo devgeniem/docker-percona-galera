@@ -37,21 +37,11 @@ echo "==> Initialize"
 if [[ $SERVICE_DISCOVERY == "env" ]]; then
   echo "----> Using Environment variables for configuration"
   configure_env
-elif [[ $SERVICE_DISCOVERY == "etcd"  ]]; then
-  echo "----> Using ETCD directly for configuration"
-  configure_etcd
-else
-  echo "----> Using registrator/etcd for configuration"
-  configure_registrator
 fi
 
 # prepare runit
 mkdir -p /etc/service/percona
 mkdir -p /etc/service/healthcheck
-mkdir -p /etc/service/confd
-
-# initialize confd
-init_confd
 
 # initialize data volume
 init_database

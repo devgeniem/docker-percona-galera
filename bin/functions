@@ -1,13 +1,4 @@
 #!/bin/bash
-
-function etcd_set_default {
-  etcdctl --no-sync -C $ETCD mk /$1 $2 >/dev/null 2>&1 || true
-}
-
-function etcd_make_directory {
-  etcdctl --no-sync -C $ETCD setdir /$1 >/dev/null 2>&1 || true
-}
-
 function cluster_members() {
   CLUSTER_MEMBERS=
   LIST=
@@ -21,21 +12,6 @@ function cluster_members() {
     fi
   done
   export CLUSTER_MEMBERS=$(echo $LIST | sed 's/,$//')
-}
-
-function publish_to_etcd() {
-  etcdctl $ETCD_OPTIONS set /services/database_port/$HOSTNAME:factorish-database:3306 $HOST:3306 --ttl ${TTL} > /dev/null
-  etcdctl $ETCD_OPTIONS set /services/database_ssi/$HOSTNAME:factorish-database:4568 $HOST:4568 --ttl ${TTL} > /dev/null
-  etcdctl $ETCD_OPTIONS set /services/database_sst/$HOSTNAME:factorish-database:4444 $HOST:4444 --ttl ${TTL} > /dev/null
-  etcdctl $ETCD_OPTIONS set /services/database_mon/$HOSTNAME:factorish-database:4567 $HOST:4567 --ttl ${TTL} > /dev/null
-}
-
-function init_confd() {
-  # wait for confd to run once and install initial templates
-  until confd -onetime ${CONFD_OPTIONS}; do
-    echo "==> database: waiting for confd to write initial templates..."
-    sleep $(($TTL/2))  # sleep for half the TTL
-  done
 }
 
 function init_database() {
@@ -70,26 +46,6 @@ function mysql_creds() {
   mysql -e "SET wsrep_on=OFF; GRANT ALL PRIVILEGES ON *.* TO '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASS';"
   mysql -e "SET wsrep_on=OFF; GRANT SUPER ON *.* TO '$MYSQL_USER'@'%' WITH GRANT OPTION;"
   mysql -e 'FLUSH PRIVILEGES;'
-}
-
-function configure_etcd() {
-  export ETCD_PORT=${ETCD_PORT:-4001}
-  export ETCD="$ETCD_HOST:$ETCD_PORT"
-  export ETCD_PATH=${ETCD_PATH:-/database}
-  export ETCD_OPTIONS="--no-sync -C $ETCD"
-  export CONFD_OPTIONS="-node $ETCD -config-file /app/confd.toml -backend etcd"
-  # wait for etcd to be available
-  until etcdctl --no-sync -C $ETCD ls >/dev/null 2>&1; do
-    echo "echo ==> waiting for etcd at $ETCD..."
-    sleep $(($TTL/2))  # sleep for half the TTL
-  done
-  # wait until etcd has discarded potentially stale values
-  echo "==> Sleep $(($TTL+1)) seconds to let old services expire"
-  sleep $(($TTL+1))
-  etcd_make_directory services/database_port
-  etcd_make_directory services/database_sst
-  etcd_make_directory services/database_ssi
-  etcd_make_directory services/database_mon
 }
 
 function configure_registrator() {

@@ -6,7 +6,7 @@
 FROM debian:jessie
 MAINTAINER Onni Hakala "onni.hakala@geniem.com"
 
-ENV PERCONA_VERSION=5.6 ETCD_VERSION=2.2.0 CONFD_VERSION=0.10.0 DEBIAN_FRONTEND=noninteractive
+ENV PERCONA_VERSION=5.6 DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /tmp
 

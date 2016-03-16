@@ -1,0 +1,40 @@
+#!/bin/bash
+#
+# This script is designed to be run inside the container
+#
+
+# fail hard and fast even on pipelines
+set -eo pipefail
+
+# set debug based on envvar
+[[ $DEBUG ]] && set -x
+
+MYSQL_USER=${MYSQL_USER:-admin}
+MYSQL_PASS=${MYSQL_PASS:-admin}
+REP_USER=${REP_USER:-replicator}
+REP_PASS=${REP_PASS:-replicator}
+CLUSTER=${CLUSTER:-galera}
+
+PORT=${PORT:-4567}
+PROTO=${PROTO:-tcp}
+
+garbd -a gcomm://$CLUSTER_MEMBERS?pc.wait_prim=no -g $CLUSTER -n $HOST &
+
+SERVICE_PID=$!
+
+echo $SERVICE_PID > /app/database.pid
+
+# smart shutdown on SIGINT and SIGTERM
+function on_exit() {
+    kill -TERM $SERVICE_PID
+    wait $SERVICE_PID 2>/dev/null
+    exit 0
+}
+trap on_exit INT TERM
+
+# wait for the service to become available
+sleep 1 && while [[ -z $(netstat -lnt | awk "\$6 == \"LISTEN\" && \$4 ~ \".4567\" && \$1 ~ \"tcp.?\"") ]] ; do sleep 1; done
+
+echo database-garbd running...
+
+wait

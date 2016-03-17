@@ -5,7 +5,7 @@ This docker image contains Percona with the galera extentions and XtraBackup ins
 
 If etcd is available it will automatically cluster itself with Galera and the XtraBackup SST.
 
-This fork has garbd script fixed.
+This fork has garbd script fixed. You can set `CLUSTER_MEMBERS` even for node which bootstraps so that it can later on join the cluster without bootstrapping it again. This comes with a price that if whole cluster is down and you restart the containers the node with `BOOTSTRAP=1` will always bootstrap even though other nodes can have more data than it has. I'm figuring out how to always bootstrap from node which has latest state using consul as helper.
 
 Fetching
 ========

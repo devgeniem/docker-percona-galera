@@ -23,6 +23,23 @@ function cluster_members() {
   export CLUSTER_MEMBERS=$(echo $LIST | sed 's/,$//')
 }
 
+# Check if other nodes are alive
+# @param $1 - Comma separated list of other nodes
+# @return boolean
+function check_if_anyone_is_alive() {
+  members=$(echo $1 | tr "," "\n")
+
+  for m in $members
+  do
+      echo "Checking cluster member: $m"
+      # Check if mysql port is open
+      if nc -z $m 3306 >> /dev/null; then
+        return 0
+      fi
+  done
+  return 1
+}
+
 function publish_to_etcd() {
   etcdctl $ETCD_OPTIONS set /services/database_port/$HOSTNAME:factorish-database:3306 $HOST:3306 --ttl ${TTL} > /dev/null
   etcdctl $ETCD_OPTIONS set /services/database_ssi/$HOSTNAME:factorish-database:4568 $HOST:4568 --ttl ${TTL} > /dev/null

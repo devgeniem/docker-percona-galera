@@ -81,9 +81,20 @@ if [[ -z $CLUSTER_MEMBERS ]]; then  # if cluster is empty
     exec /usr/bin/runsvdir -P /etc/service
   fi
 else # if cluster is not empty, go ahead and start.
-  echo "-----> joining cluster with known members: $CLUSTER_MEMBERS"
+
+  # If this container was started after bootstrapping was done
+  # We don't want to bootstrap again
+  if [[ $BOOTSTRAP == "1" ]] && ! check_if_anyone_is_alive $CLUSTER_MEMBERS; then
+    echo "-----> Starting primary database."
+    echo "mysqld_safe --wsrep-new-cluster $WSREP_OPTIONS" | tee /app/bin/mysql_boot
+    exec /usr/bin/runsvdir -P /etc/service
+  else
+    sleep 5
+    echo "-----> joining cluster with known members: $CLUSTER_MEMBERS"
     echo "mysqld_safe --wsrep_cluster_address=gcomm://$CLUSTER_MEMBERS $WSREP_OPTIONS $DB_OPTIONS" | tee /app/bin/mysql_boot
     exec /usr/bin/runsvdir -P /etc/service
+  fi
+
 fi
 
 wait

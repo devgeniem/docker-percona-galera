@@ -25,6 +25,7 @@ function cluster_members() {
 
 # Check if other nodes are alive
 # @param $1 - Comma separated list of other nodes
+# @param $2 - This host
 # @return boolean
 function check_if_anyone_is_alive() {
   members=$(echo $1 | tr "," "\n")
@@ -32,8 +33,9 @@ function check_if_anyone_is_alive() {
   for m in $members
   do
       echo "Checking cluster member: $m"
-      # Check if mysql port is open
-      if nc -z $m 3306 >> /dev/null; then
+      if [[ "$m" == "$2" ]]; then
+        echo "Skipping $m, this is my hostname..."
+      elif nc -z $m 3306 >> /dev/null; then
         return 0
       fi
   done

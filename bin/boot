@@ -84,7 +84,7 @@ else # if cluster is not empty, go ahead and start.
 
   # If this container was started after bootstrapping was done
   # We don't want to bootstrap again
-  if [[ $BOOTSTRAP == "1" ]] && ! check_if_anyone_is_alive $CLUSTER_MEMBERS; then
+  if [[ $BOOTSTRAP == "1" ]] && ! check_if_anyone_is_alive $CLUSTER_MEMBERS $HOST; then
     echo "-----> Starting primary database."
     echo "mysqld_safe --wsrep-new-cluster $WSREP_OPTIONS" | tee /app/bin/mysql_boot
     exec /usr/bin/runsvdir -P /etc/service

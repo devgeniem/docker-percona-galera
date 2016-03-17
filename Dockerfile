@@ -27,6 +27,7 @@ RUN \
   percona-xtradb-cluster-server-${PERCONA_VERSION}  \
   percona-xtrabackup \
   percona-xtradb-cluster-garbd-3.x \
+  net-tools \
   --no-install-recommends && \
   locale-gen en_US.UTF-8 && \
   rm -rf /var/lib/apt/lists/* && \
